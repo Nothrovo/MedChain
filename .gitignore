@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Kunci kriptografi - JANGAN PERNAH commit private key
+keys_demo/
+keys/
+*.pem
+
+# Virtual environment 
+venv/
+.venv/
+
+# Editor/OS files
+.vscode/
+.DS_Store
