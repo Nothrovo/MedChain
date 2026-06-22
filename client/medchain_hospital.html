@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedChain Hospital — Sistem Rekam Medis Terdistribusi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Inter',system-ui,sans-serif;color:#1A3320;background:#fff;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+
+/* ── Tokens ─────────────────────────────────────────────────────────────────── */
+:root{
+  --green:#3CB043;
+  --green-dark:#2A8030;
+  --green-deep:#1A3320;
+  --green-pale:#F4FCF4;
+  --green-light:#E2F0E3;
+  --green-mid:#6B8F72;
+  --white:#FFFFFF;
+  --off:#F9FDF9;
+  --border:#D8EDD9;
+  --text:#1A3320;
+  --text-sub:#4A6B52;
+  --text-muted:#7A9B82;
+  --radius:10px;
+  --radius-lg:16px;
+  --shadow:0 2px 12px rgba(60,176,67,.08);
+  --shadow-lg:0 8px 32px rgba(60,176,67,.14);
+  --transition:.2s ease;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────────── */
+.container{max-width:1200px;margin:0 auto;padding:0 2rem}
+.eyebrow{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green)}
+.section-label{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:.5rem}
+h2.serif{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:400;color:var(--green-deep);line-height:1.2}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:1200px;margin:0 auto;padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between;height:64px;
+}
+.nav-brand{display:flex;align-items:center;gap:.7rem}
+.nav-brand-icon{
+  width:36px;height:36px;background:var(--green);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;color:#fff;
+}
+.nav-brand-text{font-weight:800;font-size:1rem;color:var(--green-deep);letter-spacing:-.01em}
+.nav-brand-sub{font-size:.65rem;color:var(--text-muted);font-weight:400;letter-spacing:.05em;text-transform:uppercase}
+.nav-links{display:flex;align-items:center;gap:2rem}
+.nav-links a{font-size:.85rem;font-weight:500;color:var(--text-sub);transition:color var(--transition)}
+.nav-links a:hover,.nav-links a.active{color:var(--green)}
+.nav-links a.active{font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.4rem;border-radius:var(--radius);font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:all var(--transition)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark);color:#fff;transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.btn-ghost{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.btn-ghost:hover{background:var(--green-pale)}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.nav-hamburger span{display:block;width:22px;height:2px;background:var(--green-deep);border-radius:2px;transition:all .3s}
+
+/* ── Ticker / Notice ─────────────────────────────────────────────────────────── */
+.ticker{
+  background:var(--green);color:#fff;
+  padding:.45rem 0;overflow:hidden;white-space:nowrap;
+}
+.ticker-inner{display:inline-block;animation:ticker 28s linear infinite}
+.ticker-inner span{margin:0 3rem;font-size:.78rem;font-weight:500}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── Hero ─────────────────────────────────────────────────────────────────────── */
+.hero{
+  min-height:88vh;display:flex;align-items:center;
+  background:linear-gradient(112deg,#fff 0%,var(--green-pale) 100%);
+  position:relative;overflow:hidden;
+}
+/* Signature element: vertical green rule cutting hero */
+.hero::before{
+  content:'';position:absolute;left:42%;top:0;bottom:0;
+  width:1.5px;background:linear-gradient(to bottom,transparent,var(--green) 30%,var(--green) 70%,transparent);
+  opacity:.18;pointer-events:none;
+}
+.hero-grid{
+  max-width:1200px;margin:0 auto;padding:5rem 2rem 4rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;
+  width:100%;
+}
+.hero-eyebrow{display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
+.hero-eyebrow-line{width:28px;height:1.5px;background:var(--green)}
+.hero-eyebrow span{font-size:.72rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--green)}
+.hero h1{
+  font-family:'DM Serif Display',Georgia,serif;
+  font-size:clamp(2.6rem,5vw,4rem);
+  font-weight:400;color:var(--green-deep);
+  line-height:1.1;letter-spacing:-.02em;
+  margin-bottom:1.4rem;
+}
+.hero h1 em{font-style:italic;color:var(--green)}
+.hero-sub{
+  font-size:1rem;color:var(--text-sub);line-height:1.75;
+  max-width:440px;margin-bottom:2rem;font-weight:400;
+}
+.hero-actions{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:3rem}
+.hero-stats{display:flex;gap:2.5rem;padding-top:2rem;border-top:1px solid var(--border)}
+.stat-num{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--green-deep);line-height:1}
+.stat-num sup{font-size:1rem;color:var(--green)}
+.stat-lbl{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.3rem}
+
+/* Hero right: blockchain integrity badge */
+.hero-visual{display:flex;flex-direction:column;gap:1rem;align-items:flex-end}
+.integrity-badge{
+  background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.6rem 2rem;width:100%;max-width:340px;
+  box-shadow:var(--shadow-lg);
+  position:relative;
+}
+.integrity-badge::before{
+  content:'';position:absolute;top:1rem;right:1rem;
+  width:10px;height:10px;border-radius:50%;background:var(--green);
+  animation:pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{box-shadow:0 0 0 0 rgba(60,176,67,.4)}
+  50%{box-shadow:0 0 0 8px rgba(60,176,67,0)}
+}
+.badge-title{font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.8rem}
+.badge-status{display:flex;align-items:center;gap:.6rem;margin-bottom:1.2rem}
+.badge-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.badge-status-text{font-weight:700;font-size:.88rem;color:var(--green-deep)}
+.badge-hash{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  color:var(--text-muted);background:var(--green-pale);
+  padding:.6rem .8rem;border-radius:6px;word-break:break-all;line-height:1.6;
+  border:1px solid var(--green-light);
+}
+.badge-hash .hl{color:var(--green);font-weight:600}
+.badge-meta{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem}
+.badge-meta-item{background:var(--off);border-radius:6px;padding:.5rem .6rem}
+.badge-meta-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:.2rem}
+.badge-meta-value{font-size:.78rem;font-weight:700;color:var(--green-deep)}
+
+.mini-chain{display:flex;flex-direction:column;gap:.4rem;width:100%;max-width:340px}
+.mini-block{
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  padding:.7rem .9rem;display:flex;align-items:center;gap:.7rem;
+  font-size:.75rem;transition:all var(--transition);
+}
+.mini-block:hover{border-color:var(--green);box-shadow:var(--shadow)}
+.mini-block-icon{font-size:1rem;flex-shrink:0}
+.mini-block-body{flex:1;min-width:0}
+.mini-block-name{font-weight:600;color:var(--green-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-block-hash{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted)}
+.mini-block-badge{font-size:.62rem;font-weight:700;color:var(--green);background:var(--green-pale);padding:.15rem .5rem;border-radius:20px;flex-shrink:0}
+.chain-link{text-align:center;color:var(--green-light);font-size:.75rem;font-family:'JetBrains Mono',monospace;line-height:1}
+
+/* ── Section wrapper ──────────────────────────────────────────────────────────── */
+section{padding:5rem 0}
+section.alt{background:var(--off)}
+.section-head{margin-bottom:2.5rem}
+.section-head p{font-size:.95rem;color:var(--text-sub);line-height:1.75;max-width:480px;margin-top:.6rem}
+
+/* ── Feature strip ───────────────────────────────────────────────────────────── */
+.feature-strip{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.feature-strip .container{display:grid;grid-template-columns:repeat(5,1fr)}
+.feature-item{
+  padding:2rem 1.5rem;border-right:1px solid var(--border);
+  text-align:center;
+}
+.feature-item:last-child{border-right:none}
+.feature-item .fi-icon{font-size:1.6rem;margin-bottom:.6rem}
+.feature-item .fi-title{font-weight:700;font-size:.85rem;color:var(--green-deep);margin-bottom:.3rem}
+.feature-item .fi-desc{font-size:.76rem;color:var(--text-muted);line-height:1.55}
+@media(max-width:900px){.feature-strip .container{grid-template-columns:1fr 1fr}.feature-item{border-right:none;border-bottom:1px solid var(--border)}}
+
+/* ── Service cards ───────────────────────────────────────────────────────────── */
+.service-card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.6rem;transition:all var(--transition);position:relative;overflow:hidden;
+}
+.service-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--green);transform:scaleX(0);transform-origin:left;transition:transform var(--transition);
+}
+.service-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.service-card:hover::after{transform:scaleX(1)}
+.service-icon{width:44px;height:44px;background:var(--green-pale);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1rem}
+.service-name{font-weight:700;font-size:.92rem;color:var(--green-deep);margin-bottom:.4rem}
+.service-desc{font-size:.8rem;color:var(--text-sub);line-height:1.65}
+.service-tag{display:inline-block;font-size:.65rem;font-weight:600;color:var(--green);background:var(--green-pale);padding:.2rem .6rem;border-radius:20px;margin-top:.8rem;letter-spacing:.05em}
+
+/* ── Doctor cards ────────────────────────────────────────────────────────────── */
+.doctor-card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;transition:all var(--transition);
+}
+.doctor-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.doctor-avatar{
+  height:140px;background:linear-gradient(135deg,var(--green-light),var(--green-pale));
+  display:flex;align-items:center;justify-content:center;font-size:3.5rem;
+  position:relative;
+}
+.doctor-rating{
+  position:absolute;top:.7rem;right:.7rem;
+  background:#fff;border:1px solid var(--border);
+  border-radius:20px;padding:.2rem .6rem;
+  font-size:.7rem;font-weight:700;color:var(--green-deep);
+}
+.doctor-info{padding:1.2rem}
+.doctor-name{font-weight:800;font-size:.88rem;color:var(--green-deep);margin-bottom:.2rem}
+.doctor-spec{font-size:.75rem;color:var(--green);font-weight:600;margin-bottom:.7rem}
+.doctor-divider{border:none;border-top:1px solid var(--border);margin:.6rem 0}
+.doctor-meta{font-size:.74rem;color:var(--text-muted);line-height:1.8}
+.doctor-jadwal{
+  background:var(--green-pale);border-radius:6px;padding:.45rem .7rem;
+  font-size:.72rem;color:var(--green-dark);font-weight:600;margin-top:.7rem;
+  display:flex;align-items:center;gap:.4rem;
+}
+.doctor-btn{
+  display:block;background:var(--green);color:#fff;text-align:center;
+  padding:.5rem;border-radius:7px;font-size:.78rem;font-weight:700;
+  margin-top:.8rem;transition:background var(--transition);cursor:pointer;
+}
+.doctor-btn:hover{background:var(--green-dark)}
+
+/* ── Testimonials ────────────────────────────────────────────────────────────── */
+.testi-card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.6rem;
+}
+.testi-stars{color:var(--green);font-size:.85rem;margin-bottom:.7rem;letter-spacing:.1em}
+.testi-text{font-size:.88rem;color:var(--text-sub);line-height:1.75;font-style:italic;margin-bottom:1.1rem;position:relative;padding-left:.8rem;border-left:2px solid var(--green-light)}
+.testi-author{font-weight:700;font-size:.82rem;color:var(--green-deep)}
+.testi-role{font-size:.72rem;color:var(--text-muted);margin-top:.15rem}
+
+/* ── Stats row ───────────────────────────────────────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+.stat-card{padding:2.2rem 1.5rem;text-align:center;background:#fff;border-right:1px solid var(--border)}
+.stat-card:last-child{border-right:none}
+.stat-card .num{font-family:'DM Serif Display',serif;font-size:2.6rem;color:var(--green-deep);line-height:1}
+.stat-card .num sup{font-size:1.2rem;color:var(--green)}
+.stat-card .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:.5rem}
+@media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr}.stat-card:nth-child(2){border-right:none}.stat-card:nth-child(3){border-right:1px solid var(--border)}}
+
+/* ── CTA Banner ──────────────────────────────────────────────────────────────── */
+.cta-banner{
+  background:linear-gradient(120deg,var(--green-dark) 0%,var(--green) 60%,#4DC455 100%);
+  padding:5rem 2rem;text-align:center;color:#fff;
+  position:relative;overflow:hidden;
+}
+.cta-banner::before{
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,.06);
+}
+.cta-banner::after{
+  content:'';position:absolute;bottom:-60px;left:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+}
+.cta-banner h2{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:400;margin-bottom:.8rem;position:relative;z-index:1}
+.cta-banner p{font-size:.95rem;opacity:.88;margin-bottom:2rem;position:relative;z-index:1}
+.cta-banner .actions{display:flex;justify-content:center;gap:.8rem;flex-wrap:wrap;position:relative;z-index:1}
+.btn-white{background:#fff;color:var(--green-dark);font-weight:700}
+.btn-white:hover{background:var(--green-pale)}
+.btn-white-outline{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.6)}
+.btn-white-outline:hover{background:rgba(255,255,255,.1)}
+
+/* ── Blockchain section ──────────────────────────────────────────────────────── */
+.blockchain-section{background:var(--green-deep);color:#fff;padding:5rem 0}
+.blockchain-section .eyebrow{color:var(--green)}
+.blockchain-section h2{color:#fff}
+.blockchain-section p.sub{color:rgba(255,255,255,.65)}
+.chain-visual{display:flex;flex-direction:column;gap:.6rem;margin-top:2rem}
+.chain-block{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+  border-left:3px solid var(--green);border-radius:8px;
+  padding:.9rem 1.1rem;display:flex;align-items:center;gap:1rem;
+  font-family:'JetBrains Mono',monospace;font-size:.73rem;
+  transition:all var(--transition);
+}
+.chain-block:hover{background:rgba(255,255,255,.08);border-left-color:#4DC455}
+.chain-block.genesis{border-left-color:#a29bfe}
+.chain-block-idx{font-weight:600;color:var(--green);min-width:60px}
+.chain-block.genesis .chain-block-idx{color:#a29bfe}
+.chain-block-data{flex:1;color:rgba(255,255,255,.8)}
+.chain-block-hash{color:rgba(255,255,255,.35);font-size:.65rem}
+.chain-connector{text-align:left;padding-left:1.1rem;color:rgba(255,255,255,.2);font-size:.75rem;font-family:'JetBrains Mono',monospace;line-height:1;margin:-0.2rem 0}
+.feature-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:.4rem .9rem;font-size:.78rem;color:rgba(255,255,255,.75);margin:.25rem}
+
+/* ── Asuransi ─────────────────────────────────────────────────────────────────── */
+.asuransi-chip{
+  display:inline-block;background:var(--green-pale);border:1px solid var(--green-light);
+  color:var(--green-dark);font-size:.78rem;font-weight:600;
+  padding:.35rem .85rem;border-radius:20px;margin:.25rem;
+}
+
+/* ── Form / Contact ──────────────────────────────────────────────────────────── */
+.form-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.form-group label{font-size:.78rem;font-weight:600;color:var(--text-sub)}
+.form-group input,.form-group select,.form-group textarea{
+  padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;
+  font-size:.88rem;font-family:'Inter',sans-serif;color:var(--text);
+  background:#fff;transition:border-color var(--transition);outline:none;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(60,176,67,.08)}
+.form-group textarea{resize:vertical;min-height:90px}
+.form-info{background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.8rem 1rem;font-size:.8rem;color:var(--green-dark);display:flex;gap:.6rem;align-items:flex-start}
+.info-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;display:flex;gap:.9rem;align-items:flex-start;margin-bottom:.8rem}
+.info-icon-box{font-size:1.3rem;min-width:36px}
+.info-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-weight:700;margin-bottom:.15rem}
+.info-value{font-size:.86rem;font-weight:600;color:var(--green-deep);line-height:1.5}
+.info-sub{font-size:.75rem;color:var(--text-muted);margin-top:.1rem}
+.ops-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--green-pale);font-size:.84rem}
+.ops-row:last-child{border-bottom:none}
+.ops-hari{color:var(--text-sub);font-weight:500}
+.ops-jam{color:var(--green);font-weight:700}
+.map-placeholder{
+  background:linear-gradient(135deg,var(--green-light),var(--green-pale));
+  border-radius:var(--radius);border:1px solid var(--border);
+  height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin-top:.8rem;gap:.4rem;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────────── */
+footer{background:var(--green-deep);color:rgba(255,255,255,.55);padding:4rem 0 2rem}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem}
+.footer-brand{font-weight:800;font-size:1.1rem;color:#fff;margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem}
+.footer-tagline{font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:1.2rem}
+.footer-contact{font-size:.8rem;line-height:2}
+.footer-col h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.5);margin-bottom:.9rem}
+.footer-links a{display:block;font-size:.82rem;color:rgba(255,255,255,.45);margin-bottom:.5rem;transition:color var(--transition)}
+.footer-links a:hover{color:var(--green)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.72rem}
+.footer-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:.25rem .7rem;font-size:.68rem;color:rgba(255,255,255,.5)}
+@media(max-width:900px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr}.footer-bottom{flex-direction:column;text-align:center}}
+
+/* ── Scroll animations ────────────────────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}}
+
+/* ── Page sections (nav routing) ─────────────────────────────────────────────── */
+.page{display:none}.page.active{display:block}
+
+/* ── Page heroes ─────────────────────────────────────────────────────────────── */
+.page-hero{
+  background:linear-gradient(112deg,#fff 0%,var(--green-pale) 100%);
+  padding:4rem 2rem 3rem;border-bottom:1px solid var(--border);
+}
+.page-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:400;color:var(--green-deep);margin:.5rem 0 .7rem;line-height:1.15}
+.page-hero p{font-size:.95rem;color:var(--text-sub);max-width:520px;line-height:1.7}
+
+/* ── Tabs (Ledger) ─────────────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:2rem;overflow-x:auto}
+.tab-btn{padding:.75rem 1.3rem;font-size:.82rem;font-weight:600;color:var(--text-muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all var(--transition)}
+.tab-btn.active,.tab-btn:hover{color:var(--green);border-bottom-color:var(--green)}
+
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Integrity status ────────────────────────────────────────────────────────── */
+.status-valid,.status-compromised{border-radius:var(--radius-lg);padding:1.2rem 1.6rem;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}
+.status-valid{background:linear-gradient(135deg,#d4f5d7,#e8f8e9);border:1px solid #a8e0ab}
+.status-compromised{background:linear-gradient(135deg,#ffd5d5,#ffe8e8);border:1px solid #ffb3b3}
+.status-icon{font-size:2rem;flex-shrink:0}
+.status-title{font-weight:800;font-size:.9rem;color:var(--green-deep)}
+.status-msg{font-size:.8rem;color:var(--text-sub);margin-top:.2rem}
+.status-compromised .status-title,.status-compromised .status-msg{color:#5a1a1a}
+
+/* ── Block chain visual ──────────────────────────────────────────────────────── */
+.block-node{
+  background:#fff;border:1px solid var(--border);border-left:4px solid var(--green);
+  border-radius:var(--radius);padding:.9rem 1.1rem;
+  font-family:'JetBrains Mono',monospace;font-size:.73rem;margin-bottom:.3rem;
+  transition:box-shadow var(--transition);
+}
+.block-node:hover{box-shadow:var(--shadow)}
+.block-node.genesis{border-left-color:#a29bfe;background:var(--off)}
+.block-node.invalid{border-left-color:#d63031;background:#fff5f5}
+.block-header-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.block-idx{font-weight:700;font-size:.8rem;color:var(--green-deep)}
+.block-ts-fs{font-size:.65rem;color:var(--text-muted);background:var(--off);padding:.15rem .5rem;border-radius:4px}
+.block-faskes-tag{font-size:.62rem;font-weight:700;color:var(--green);background:var(--green-pale);padding:.15rem .5rem;border-radius:10px}
+.block-data-row{color:var(--text-sub);font-size:.75rem;margin-bottom:.5rem}
+.hash-grid{display:grid;grid-template-columns:50px 1fr;gap:.2rem .5rem;align-items:start}
+.hl-label{color:var(--text-muted);font-size:.65rem;font-weight:600;padding-top:.1rem}
+.hl-val{word-break:break-all;font-size:.67rem}
+.hl-green{color:var(--green)}
+.hl-blue{color:#74b9ff}
+.hl-purple{color:#a29bfe}
+.chain-conn{text-align:center;color:var(--green-light);font-size:.7rem;font-family:'JetBrains Mono',monospace;padding:.1rem 0;margin:-0.1rem 0}
+
+/* ── Metrics row ──────────────────────────────────────────────────────────────── */
+.metrics-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem}
+.metric-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem}
+.metric-val{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--green-deep);line-height:1}
+.metric-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:.3rem}
+@media(max-width:700px){.metrics-row{grid-template-columns:1fr 1fr}}
+
+/* ── Toast ────────────────────────────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:999;
+  background:var(--green-deep);color:#fff;border-left:4px solid var(--green);
+  padding:1rem 1.4rem;border-radius:var(--radius);font-size:.85rem;font-weight:500;
+  box-shadow:var(--shadow-lg);transform:translateY(100px);opacity:0;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);max-width:320px;
+}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────────── */
+@media(max-width:800px){
+  .hero-grid{grid-template-columns:1fr;gap:2.5rem;padding:3rem 1.5rem}
+  .hero-visual{align-items:flex-start}
+  .integrity-badge,.mini-chain{max-width:100%}
+  .hero-stats{gap:1.5rem}
+  .nav-links{display:none}
+  .nav-hamburger{display:flex}
+  .form-row{grid-template-columns:1fr}
+  .hero::before{display:none}
+  section{padding:3rem 0}
+  .page-hero{padding:2.5rem 1.5rem}
+}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .feature-strip .container{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Ticker ─────────────────────────────────────────────────────────────── -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>🏥 IGD MedChain Hospital beroperasi 24 jam / 7 hari</span>
+    <span>📞 Hotline: (021) 555-0188</span>
+    <span>🚑 Layanan ambulans tersedia — hubungi kami kapan saja</span>
+    <span>🔐 Sistem rekam medis terenkripsi RSA-2048 & SHA-256</span>
+    <span>🏥 IGD MedChain Hospital beroperasi 24 jam / 7 hari</span>
+    <span>📞 Hotline: (021) 555-0188</span>
+    <span>🚑 Layanan ambulans tersedia — hubungi kami kapan saja</span>
+    <span>🔐 Sistem rekam medis terenkripsi RSA-2048 & SHA-256</span>
+  </div>
+</div>
+
+<!-- ── Navbar ─────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand" onclick="showPage('beranda')" style="cursor:pointer">
+      <div class="nav-brand-icon">🏥</div>
+      <div>
+        <div class="nav-brand-text">MedChain Hospital</div>
+        <div class="nav-brand-sub">Sistem Rekam Medis Terdistribusi</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="active" onclick="showPage('beranda');return false">Beranda</a>
+      <a href="#" onclick="showPage('layanan');return false">Layanan</a>
+      <a href="#" onclick="showPage('dokter');return false">Dokter</a>
+      <a href="#" onclick="showPage('artikel');return false">Artikel</a>
+      <a href="#" onclick="showPage('ledger');return false">Blockchain Ledger</a>
+      <a href="#" onclick="showPage('kontak');return false" class="btn btn-primary" style="padding:.5rem 1.1rem">Janji Temu</a>
+    </div>
+    <div class="nav-hamburger" id="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+  <!-- mobile menu -->
+  <div id="mobile-menu" style="display:none;border-top:1px solid var(--border);padding:.5rem 0">
+    <div style="display:flex;flex-direction:column">
+      <a href="#" onclick="showPage('beranda');toggleMobileMenu();return false" style="padding:.8rem 2rem;font-size:.9rem;font-weight:500;color:var(--text-sub);border-bottom:1px solid var(--border)">Beranda</a>
+      <a href="#" onclick="showPage('layanan');toggleMobileMenu();return false" style="padding:.8rem 2rem;font-size:.9rem;font-weight:500;color:var(--text-sub);border-bottom:1px solid var(--border)">Layanan</a>
+      <a href="#" onclick="showPage('dokter');toggleMobileMenu();return false" style="padding:.8rem 2rem;font-size:.9rem;font-weight:500;color:var(--text-sub);border-bottom:1px solid var(--border)">Dokter</a>
+      <a href="#" onclick="showPage('artikel');toggleMobileMenu();return false" style="padding:.8rem 2rem;font-size:.9rem;font-weight:500;color:var(--text-sub);border-bottom:1px solid var(--border)">Artikel</a>
+      <a href="#" onclick="showPage('ledger');toggleMobileMenu();return false" style="padding:.8rem 2rem;font-size:.9rem;font-weight:500;color:var(--text-sub);border-bottom:1px solid var(--border)">Blockchain Ledger</a>
+      <a href="#" onclick="showPage('kontak');toggleMobileMenu();return false" style="margin:1rem 2rem;padding:.65rem 1.2rem;background:var(--green);color:#fff;border-radius:8px;font-weight:600;font-size:.9rem;text-align:center">Janji Temu</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: BERANDA
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-beranda" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-eyebrow"><div class="hero-eyebrow-line"></div><span>Rumah Sakit Terpercaya · Jakarta</span></div>
+        <h1>Kesehatan Anda,<br><em>Prioritas</em> Kami</h1>
+        <p class="hero-sub">MedChain Hospital menghadirkan layanan medis berstandar tinggi dengan sistem rekam medis elektronik terdistribusi — aman, transparan, dan dapat ditelusuri sepenuhnya.</p>
+        <div class="hero-actions">
+          <a href="#" onclick="showPage('kontak');return false" class="btn btn-primary">Buat Janji Temu →</a>
+          <a href="#" onclick="showPage('layanan');return false" class="btn btn-ghost">Lihat Layanan</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="stat-num">15<sup>+</sup></div><div class="stat-lbl">Tahun Berdiri</div></div>
+          <div><div class="stat-num">48<sup>+</sup></div><div class="stat-lbl">Dokter Spesialis</div></div>
+          <div><div class="stat-num">120<sup>K+</sup></div><div class="stat-lbl">Pasien Tertangani</div></div>
+          <div><div class="stat-num">24<sup>/7</sup></div><div class="stat-lbl">Layanan IGD</div></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <!-- Signature element: live blockchain integrity badge -->
+        <div class="integrity-badge">
+          <div class="badge-title">Blockchain Ledger · Status Real-Time</div>
+          <div class="badge-status">
+            <div class="badge-dot"></div>
+            <div class="badge-status-text">✅ &nbsp;RANTAI VALID — TIDAK ADA MANIPULASI</div>
+          </div>
+          <div class="badge-hash">
+            <span class="hl">Hash:</span><br>
+            3cb043<span style="opacity:.4">a8f2e9</span>1d7c<span style="opacity:.4">52b3</span>9e6f<span style="opacity:.4">0a4d</span>8b1c<br>
+            <span style="opacity:.35">e2f5d7a9c3b6084e1f2a5d8c7b9e3f1a</span>
+          </div>
+          <div class="badge-meta">
+            <div class="badge-meta-item"><div class="badge-meta-label">Enkripsi</div><div class="badge-meta-value">RSA-2048</div></div>
+            <div class="badge-meta-item"><div class="badge-meta-label">Hash</div><div class="badge-meta-value">SHA-256</div></div>
+            <div class="badge-meta-item"><div class="badge-meta-label">Node</div><div class="badge-meta-value">RS_A & RS_B</div></div>
+            <div class="badge-meta-item"><div class="badge-meta-label">Blok</div><div class="badge-meta-value" id="hero-blok-count">4 Blok</div></div>
+          </div>
+        </div>
+        <!-- Mini chain preview -->
+        <div class="mini-chain">
+          <div class="mini-block">
+            <div class="mini-block-icon">🔮</div>
+            <div class="mini-block-body">
+              <div class="mini-block-name">Genesis Block</div>
+              <div class="mini-block-hash">0000...0000</div>
+            </div>
+            <div class="mini-block-badge">✅</div>
+          </div>
+          <div class="chain-link">↕ previous_hash</div>
+          <div class="mini-block">
+            <div class="mini-block-icon">👤</div>
+            <div class="mini-block-body">
+              <div class="mini-block-name">Budi Santoso · Demam Berdarah</div>
+              <div class="mini-block-hash">3cb0...4423</div>
+            </div>
+            <div class="mini-block-badge">✅</div>
+          </div>
+          <div class="chain-link">↕ previous_hash</div>
+          <div class="mini-block">
+            <div class="mini-block-icon">👤</div>
+            <div class="mini-block-body">
+              <div class="mini-block-name">Siti Rahayu · Tifus</div>
+              <div class="mini-block-hash">a8f2...b991</div>
+            </div>
+            <div class="mini-block-badge">✅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature strip -->
+  <div class="feature-strip">
+    <div class="container">
+      <div class="feature-item"><div class="fi-icon">🔒</div><div class="fi-title">Rekam Medis Aman</div><div class="fi-desc">Data terenkripsi RSA-2048 & dirantai SHA-256</div></div>
+      <div class="feature-item"><div class="fi-icon">🌐</div><div class="fi-title">Terdistribusi</div><div class="fi-desc">Sinkronisasi otomatis antar-node faskes</div></div>
+      <div class="feature-item"><div class="fi-icon">⚡</div><div class="fi-title">Respons Cepat</div><div class="fi-desc">IGD siaga penuh, penanganan &lt; 5 menit</div></div>
+      <div class="feature-item"><div class="fi-icon">🩺</div><div class="fi-title">Spesialis Lengkap</div><div class="fi-desc">20+ bidang spesialisasi dalam satu atap</div></div>
+      <div class="feature-item"><div class="fi-icon">📱</div><div class="fi-title">Telemedicine</div><div class="fi-desc">Konsultasi dokter online kapan saja</div></div>
+    </div>
+  </div>
+
+  <!-- Layanan Unggulan -->
+  <section class="alt">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-label">Yang Kami Tawarkan</div>
+        <h2 class="serif">Layanan Unggulan</h2>
+        <p>Didukung peralatan medis modern dan tenaga ahli bersertifikat nasional & internasional.</p>
+      </div>
+      <div class="grid-3 reveal">
+        <div class="service-card"><div class="service-icon">❤️</div><div class="service-name">Kardiologi</div><div class="service-desc">Pemeriksaan jantung komprehensif, EKG, ekokardiografi, uji treadmill, dan kateterisasi jantung.</div><div class="service-tag">Senin · Rabu · Jumat</div></div>
+        <div class="service-card"><div class="service-icon">🧠</div><div class="service-name">Neurologi</div><div class="service-desc">Penanganan stroke, epilepsi, migrain kronis, saraf terjepit, dan Parkinson.</div><div class="service-tag">Selasa · Kamis</div></div>
+        <div class="service-card"><div class="service-icon">👶</div><div class="service-name">Pediatri</div><div class="service-desc">Perawatan kesehatan anak sejak lahir, imunisasi lengkap, dan pemantauan tumbuh kembang.</div><div class="service-tag">Setiap Hari</div></div>
+        <div class="service-card"><div class="service-icon">🦴</div><div class="service-name">Ortopedi</div><div class="service-desc">Bedah sendi, artroskopi, penanganan patah tulang, dan fisioterapi rehabilitasi.</div><div class="service-tag">Senin · Rabu · Jumat</div></div>
+        <div class="service-card"><div class="service-icon">👁️</div><div class="service-name">Oftalmologi</div><div class="service-desc">Operasi katarak, LASIK, vitreoretinal, dan manajemen glaukoma.</div><div class="service-tag">Selasa · Kamis · Sabtu</div></div>
+        <div class="service-card"><div class="service-icon">🍼</div><div class="service-name">Obstetri & Ginekologi</div><div class="service-desc">Pemeriksaan kehamilan, USG 4D, persalinan normal & cesar, dan laparoskopi.</div><div class="service-tag">Setiap Hari</div></div>
+      </div>
+      <div style="text-align:center;margin-top:2rem" class="reveal">
+        <a href="#" onclick="showPage('layanan');return false" class="btn btn-ghost">Lihat Semua Layanan →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section>
+    <div class="container">
+      <div class="stats-row reveal">
+        <div class="stat-card"><div class="num">15<sup>+</sup></div><div class="lbl">Tahun Beroperasi</div></div>
+        <div class="stat-card"><div class="num">48<sup>+</sup></div><div class="lbl">Dokter Spesialis</div></div>
+        <div class="stat-card"><div class="num">120<sup>K+</sup></div><div class="lbl">Pasien Tertangani</div></div>
+        <div class="stat-card"><div class="num">99<sup>%</sup></div><div class="lbl">Integritas Data</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blockchain section -->
+  <section class="blockchain-section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start">
+        <div class="reveal">
+          <div class="eyebrow" style="color:var(--green)">Teknologi Inti</div>
+          <h2 class="serif" style="color:#fff;margin:.5rem 0 .8rem">Rekam Medis<br><em style="color:var(--green)">Berbasis Blockchain</em></h2>
+          <p class="sub" style="color:rgba(255,255,255,.6);font-size:.92rem;line-height:1.75;margin-bottom:1.5rem">Setiap entri rekam medis ditandatangani digital oleh dokter menggunakan RSA-2048, lalu dirantai ke entri sebelumnya dengan SHA-256. Jika satu karakter diubah, rantai pecah dan manipulasi terdeteksi seketika.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:2rem">
+            <span class="feature-pill">🔑 RSA-2048 Digital Signature</span>
+            <span class="feature-pill">#️⃣ SHA-256 Hash Chaining</span>
+            <span class="feature-pill">🌐 P2P Distributed Node</span>
+            <span class="feature-pill">🔍 Real-Time Tampering Detection</span>
+          </div>
+          <a href="#" onclick="showPage('ledger');return false" class="btn btn-primary">Buka Blockchain Ledger →</a>
+        </div>
+        <div class="reveal">
+          <div class="chain-visual">
+            <div class="chain-block genesis"><span class="chain-block-idx">BLOK #0</span><span class="chain-block-data">Genesis Block — MedChain Hospital</span><span class="chain-block-hash">hash: 0000...0000</span></div>
+            <div class="chain-connector">↓ previous_hash</div>
+            <div class="chain-block"><span class="chain-block-idx">BLOK #1</span><span class="chain-block-data">Budi Santoso · Demam Berdarah · Paracetamol 500mg</span><span class="chain-block-hash">hash: 3cb0...4a23 | sig: a8f2...deed</span></div>
+            <div class="chain-connector">↓ previous_hash</div>
+            <div class="chain-block"><span class="chain-block-idx">BLOK #2</span><span class="chain-block-data">Siti Rahayu · Tifus · Ciprofloxacin 500mg</span><span class="chain-block-hash">hash: e7d1...9b32 | sig: c3a8...f110</span></div>
+            <div class="chain-connector">↓ previous_hash</div>
+            <div class="chain-block"><span class="chain-block-idx">BLOK #3</span><span class="chain-block-data">Ahmad Fauzi · Hipertensi · Amlodipine 5mg</span><span class="chain-block-hash">hash: 1f9c...7e44 | sig: b2d5...a039</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dokter Pilihan -->
+  <section class="alt">
+    <div class="container">
+      <div class="section-head reveal" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="section-label">Tim Medis Kami</div>
+          <h2 class="serif">Dokter Pilihan</h2>
+        </div>
+        <a href="#" onclick="showPage('dokter');return false" class="btn btn-ghost" style="flex-shrink:0">Lihat Semua →</a>
+      </div>
+      <div class="grid-4 reveal">
+        <div class="doctor-card"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.9</div></div><div class="doctor-info"><div class="doctor-name">dr. Arjuna Santoso, Sp.JP</div><div class="doctor-spec">Kardiologi</div><hr class="doctor-divider"><div class="doctor-meta">🏅 15 Tahun Pengalaman<br>🎓 FK UI + Fellowship Singapura</div><div class="doctor-jadwal">🗓 Sen, Rab, Jum · 09.00–16.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+        <div class="doctor-card"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.8</div></div><div class="doctor-info"><div class="doctor-name">dr. Sari Dewi, Sp.A</div><div class="doctor-spec">Pediatri & Neonatologi</div><hr class="doctor-divider"><div class="doctor-meta">🏅 12 Tahun Pengalaman<br>🎓 FK UNPAD + Fellow RSCM</div><div class="doctor-jadwal">🗓 Setiap Hari · 07.00–14.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+        <div class="doctor-card"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.7</div></div><div class="doctor-info"><div class="doctor-name">dr. Bima Pradana, Sp.N</div><div class="doctor-spec">Neurologi</div><hr class="doctor-divider"><div class="doctor-meta">🏅 10 Tahun Pengalaman<br>🎓 FK UGM, S2 Neurologi</div><div class="doctor-jadwal">🗓 Sel, Kam · 13.00–20.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+        <div class="doctor-card"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.9</div></div><div class="doctor-info"><div class="doctor-name">dr. Lestari Putri, Sp.OG</div><div class="doctor-spec">Obstetri & Ginekologi</div><hr class="doctor-divider"><div class="doctor-meta">🏅 18 Tahun Pengalaman<br>🎓 FK UNAIR + Fellowship Belanda</div><div class="doctor-jadwal">🗓 Setiap Hari · 08.00–15.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimoni -->
+  <section>
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="section-label">Kata Pasien Kami</div>
+        <h2 class="serif">Testimoni</h2>
+      </div>
+      <div class="grid-3 reveal">
+        <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-text">Pelayanan sangat cepat dan profesional. Dokternya ramah dan penjelasannya mudah dipahami. Sistem antrian online sangat membantu.</div><div class="testi-author">Budi Hartono</div><div class="testi-role">Pasien Kardiologi · Juni 2026</div></div>
+        <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-text">Fasilitas lengkap dan bersih. Sangat terbantu dengan rekam medis digital — transparansi data membuat saya lebih percaya.</div><div class="testi-author">Siti Rahayu</div><div class="testi-role">Pasien Pediatri · Mei 2026</div></div>
+        <div class="testi-card"><div class="testi-stars">★★★★★</div><div class="testi-text">Tim IGD sangat sigap. Saat suami saya datang dalam kondisi darurat, langsung ditangani tanpa harus menunggu lama.</div><div class="testi-author">Dewi Anggraini</div><div class="testi-role">Keluarga Pasien IGD · April 2026</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h2>Jadwalkan Konsultasi Sekarang</h2>
+    <p>Daftarkan diri dan dapatkan pelayanan dari dokter spesialis kami.</p>
+    <div class="actions">
+      <a href="#" onclick="showPage('kontak');return false" class="btn btn-white">Buat Janji Temu →</a>
+      <a href="#" onclick="showPage('ledger');return false" class="btn btn-white-outline">Lihat Blockchain Ledger</a>
+    </div>
+  </div>
+
+</div><!-- /page-beranda -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: LAYANAN
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-layanan" class="page">
+  <div class="page-hero"><div class="container"><div class="eyebrow">Yang Kami Sediakan</div><h1>Layanan Medis Kami</h1><p>Lebih dari 20 spesialisasi medis dalam satu atap, didukung peralatan diagnostik berteknologi tinggi.</p></div></div>
+
+  <section><div class="container">
+    <div class="section-head"><div class="section-label">Rawat Jalan</div><h2 class="serif">Poli & Spesialisasi</h2><p>Jadwal poli setiap hari Senin–Sabtu, pukul 07.00–21.00 WIB.</p></div>
+    <div class="grid-2" id="layanan-list">
+      <div class="service-card"><div class="service-icon">❤️</div><div class="service-name">Kardiologi</div><div class="service-desc">Pemeriksaan jantung, EKG, ekokardiografi, uji treadmill, dan kateterisasi.</div><div class="service-tag">🗓 Senin, Rabu, Jumat</div></div>
+      <div class="service-card"><div class="service-icon">🧠</div><div class="service-name">Neurologi</div><div class="service-desc">Penanganan stroke, epilepsi, migrain kronis, saraf terjepit, dan parkinson.</div><div class="service-tag">🗓 Selasa, Kamis</div></div>
+      <div class="service-card"><div class="service-icon">👶</div><div class="service-name">Pediatri & Neonatologi</div><div class="service-desc">Perawatan kesehatan anak dari lahir, imunisasi lengkap, dan tumbuh kembang.</div><div class="service-tag">🗓 Setiap Hari</div></div>
+      <div class="service-card"><div class="service-icon">🦴</div><div class="service-name">Ortopedi & Traumatologi</div><div class="service-desc">Bedah sendi, penanganan patah tulang, fisioterapi, dan artroskopi.</div><div class="service-tag">🗓 Senin, Rabu, Jumat</div></div>
+      <div class="service-card"><div class="service-icon">👁️</div><div class="service-name">Oftalmologi</div><div class="service-desc">Operasi katarak, LASIK, vitreoretinal, dan glaukoma.</div><div class="service-tag">🗓 Selasa, Kamis, Sabtu</div></div>
+      <div class="service-card"><div class="service-icon">🦷</div><div class="service-name">Gigi & Mulut</div><div class="service-desc">Ortodonti, implan gigi, endodontik, dan bedah mulut minor.</div><div class="service-tag">🗓 Setiap Hari</div></div>
+      <div class="service-card"><div class="service-icon">🍼</div><div class="service-name">Obstetri & Ginekologi</div><div class="service-desc">Pemeriksaan kehamilan, USG 4D, persalinan, dan laparoskopi.</div><div class="service-tag">🗓 Setiap Hari</div></div>
+      <div class="service-card"><div class="service-icon">🫁</div><div class="service-name">Paru & Respirologi</div><div class="service-desc">Penanganan asma, PPOK, TB, dan bronkoskopi diagnostik.</div><div class="service-tag">🗓 Senin, Rabu, Sabtu</div></div>
+    </div>
+  </div></section>
+
+  <section class="alt"><div class="container">
+    <div class="section-head"><div class="section-label">Diagnostik & Penunjang</div><h2 class="serif">Fasilitas Penunjang Medis</h2><p>Hasil lab dan radiologi terintegrasi ke rekam medis digital pasien.</p></div>
+    <div class="grid-4">
+      <div class="service-card" style="text-align:center"><div class="service-icon" style="margin:0 auto 1rem">🔬</div><div class="service-name">Laboratorium Klinik</div><div class="service-desc">Hematologi, kimia darah, urinalisis, kultur & sensitivitas.</div></div>
+      <div class="service-card" style="text-align:center"><div class="service-icon" style="margin:0 auto 1rem">📡</div><div class="service-name">Radiologi & Imaging</div><div class="service-desc">Rontgen, CT-Scan 128-slice, MRI 3 Tesla, USG Doppler.</div></div>
+      <div class="service-card" style="text-align:center"><div class="service-icon" style="margin:0 auto 1rem">💊</div><div class="service-name">Farmasi 24 Jam</div><div class="service-desc">Apotek rawat inap & jalan, e-resep terintegrasi sistem.</div></div>
+      <div class="service-card" style="text-align:center"><div class="service-icon" style="margin:0 auto 1rem">🚑</div><div class="service-name">Ambulans & P3K</div><div class="service-desc">Armada ALS & BLS, siaga 24 jam, GPS tracking aktif.</div></div>
+    </div>
+  </div></section>
+
+  <section><div class="container">
+    <div class="section-head"><div class="section-label">Transparansi Biaya</div><h2 class="serif">Estimasi Tarif Layanan</h2><p>Harga estimasi. Tagihan akhir berdasarkan tindakan aktual dokter.</p></div>
+    <div class="grid-2">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+        <div style="font-weight:700;font-size:.92rem;color:var(--green-deep);margin-bottom:1rem">💊 Rawat Jalan</div>
+        <div class="ops-row"><span class="ops-hari">Konsultasi Dokter Umum</span><span class="ops-jam">Rp 150.000</span></div>
+        <div class="ops-row"><span class="ops-hari">Konsultasi Spesialis</span><span class="ops-jam">Rp 350.000 – 600.000</span></div>
+        <div class="ops-row"><span class="ops-hari">Laboratorium Dasar</span><span class="ops-jam">Rp 120.000 – 350.000</span></div>
+        <div class="ops-row"><span class="ops-hari">Rontgen Thorax</span><span class="ops-jam">Rp 200.000</span></div>
+        <div class="ops-row"><span class="ops-hari">USG Abdomen</span><span class="ops-jam">Rp 350.000</span></div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem">
+        <div style="font-weight:700;font-size:.92rem;color:var(--green-deep);margin-bottom:1rem">🏥 Rawat Inap</div>
+        <div class="ops-row"><span class="ops-hari">Kelas III</span><span class="ops-jam">Rp 350.000 / malam</span></div>
+        <div class="ops-row"><span class="ops-hari">Kelas II</span><span class="ops-jam">Rp 550.000 / malam</span></div>
+        <div class="ops-row"><span class="ops-hari">Kelas I</span><span class="ops-jam">Rp 850.000 / malam</span></div>
+        <div class="ops-row"><span class="ops-hari">VIP</span><span class="ops-jam">Rp 1.500.000 / malam</span></div>
+        <div class="ops-row"><span class="ops-hari">ICU / HCU</span><span class="ops-jam">Rp 2.500.000 / malam</span></div>
+      </div>
+    </div>
+    <div style="margin-top:2rem">
+      <div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.8rem">Partner Asuransi & BPJS</div>
+      <span class="asuransi-chip">✅ BPJS Kesehatan</span><span class="asuransi-chip">✅ Allianz</span><span class="asuransi-chip">✅ Prudential</span><span class="asuransi-chip">✅ AXA Mandiri</span><span class="asuransi-chip">✅ Manulife</span><span class="asuransi-chip">✅ BRI Life</span><span class="asuransi-chip">✅ Tokio Marine</span><span class="asuransi-chip">✅ Great Eastern</span>
+    </div>
+  </div></section>
+</div><!-- /page-layanan -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: DOKTER
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-dokter" class="page">
+  <div class="page-hero"><div class="container"><div class="eyebrow">Tim Medis Profesional</div><h1>Dokter & Spesialis Kami</h1><p>Didukung dokter berpengalaman dengan sertifikasi nasional dan internasional di berbagai spesialisasi.</p></div></div>
+  <section><div class="container">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;align-items:center">
+      <input type="text" id="dokter-search" placeholder="🔍  Cari nama atau spesialisasi..." onkeyup="filterDokter()" style="padding:.6rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.85rem;min-width:220px;outline:none;font-family:inherit">
+      <select id="dokter-filter" onchange="filterDokter()" style="padding:.6rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.85rem;outline:none;font-family:inherit;color:var(--text-sub);cursor:pointer">
+        <option value="">Semua Spesialisasi</option>
+        <option>Kardiologi</option><option>Neurologi</option><option>Pediatri</option>
+        <option>Ortopedi</option><option>Oftalmologi</option><option>Ginekologi</option>
+        <option>Paru</option><option>Gigi & Mulut</option>
+      </select>
+      <span id="dokter-count" style="font-size:.8rem;color:var(--text-muted)">Menampilkan 8 dokter</span>
+    </div>
+    <div class="grid-4" id="dokter-grid">
+      <div class="doctor-card" data-spec="Kardiologi" data-name="arjuna santoso"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.9</div></div><div class="doctor-info"><div class="doctor-name">dr. Arjuna Santoso, Sp.JP</div><div class="doctor-spec">Kardiologi · Intervensi Kardiovaskular</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UI, Fellowship NHC Singapura<br>🏅 15 Tahun Pengalaman · 👥 3.2K+ Pasien</div><div class="doctor-jadwal">🗓 Sen, Rab, Jum · 09.00–16.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Pediatri" data-name="sari dewi"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.8</div></div><div class="doctor-info"><div class="doctor-name">dr. Sari Dewi, Sp.A</div><div class="doctor-spec">Pediatri · Neonatologi</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UNPAD, Fellow RSCM<br>🏅 12 Tahun · 👥 5.1K+ Pasien</div><div class="doctor-jadwal">🗓 Setiap Hari · 07.00–14.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Neurologi" data-name="bima pradana"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.7</div></div><div class="doctor-info"><div class="doctor-name">dr. Bima Pradana, Sp.N</div><div class="doctor-spec">Neurologi · Stroke & Neurovaskular</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UGM, S2 Neurologi<br>🏅 10 Tahun · 👥 2.8K+ Pasien</div><div class="doctor-jadwal">🗓 Sel, Kam · 13.00–20.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Ginekologi" data-name="lestari putri"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.9</div></div><div class="doctor-info"><div class="doctor-name">dr. Lestari Putri, Sp.OG</div><div class="doctor-spec">Ginekologi · Fetomaternal</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UNAIR, Fellowship Belanda<br>🏅 18 Tahun · 👥 6.7K+ Pasien</div><div class="doctor-jadwal">🗓 Setiap Hari · 08.00–15.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Ortopedi" data-name="reza fauzan"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.8</div></div><div class="doctor-info"><div class="doctor-name">dr. Reza Fauzan, Sp.OT</div><div class="doctor-spec">Ortopedi · Arthroskopi & Spine</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UNDIP, Fellowship Korea<br>🏅 9 Tahun · 👥 1.9K+ Pasien</div><div class="doctor-jadwal">🗓 Sen, Rab, Jum · 14.00–20.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Oftalmologi" data-name="maya kusuma"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.9</div></div><div class="doctor-info"><div class="doctor-name">dr. Maya Kusuma, Sp.M</div><div class="doctor-spec">Oftalmologi · Retina & Vitreoretinal</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK USU, Fellowship Singapura<br>🏅 11 Tahun · 👥 2.4K+ Pasien</div><div class="doctor-jadwal">🗓 Sel, Kam, Sab · 10.00–17.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Paru" data-name="hendra wijaya"><div class="doctor-avatar">👨‍⚕️<div class="doctor-rating">⭐ 4.7</div></div><div class="doctor-info"><div class="doctor-name">dr. Hendra Wijaya, Sp.P</div><div class="doctor-spec">Paru · Onkologi Paru & Bronkoskopi</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FK UI, Fellow RS Persahabatan<br>🏅 14 Tahun · 👥 3.0K+ Pasien</div><div class="doctor-jadwal">🗓 Sen, Rab, Sab · 08.00–15.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+      <div class="doctor-card" data-spec="Gigi & Mulut" data-name="anisa pratiwi"><div class="doctor-avatar">👩‍⚕️<div class="doctor-rating">⭐ 4.8</div></div><div class="doctor-info"><div class="doctor-name">drg. Anisa Pratiwi, Sp.Ort</div><div class="doctor-spec">Gigi & Mulut · Ortodonti & Implan</div><hr class="doctor-divider"><div class="doctor-meta">🎓 FKG UI, Sertifikasi ITI Switzerland<br>🏅 8 Tahun · 👥 2.2K+ Pasien</div><div class="doctor-jadwal">🗓 Setiap Hari · 10.00–18.00</div><div class="doctor-btn" onclick="showPage('kontak')">Buat Janji →</div></div></div>
+    </div>
+    <div id="dokter-empty" style="display:none;text-align:center;padding:3rem;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:1rem">🔍</div><div style="font-weight:600;color:var(--green-deep);margin-bottom:.4rem">Tidak ada dokter ditemukan</div><div style="font-size:.85rem">Coba ubah kata kunci atau filter spesialisasi.</div></div>
+  </div></section>
+</div><!-- /page-dokter -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: ARTIKEL
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-artikel" class="page">
+  <div class="page-hero"><div class="container"><div class="eyebrow">Edukasi Kesehatan</div><h1>Artikel & Tips Kesehatan</h1><p>Informasi medis terpercaya dari dokter kami untuk mendukung gaya hidup sehat Anda.</p></div></div>
+  <section><div class="container">
+    <!-- Featured -->
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:2.5rem">
+      <div style="background:linear-gradient(135deg,var(--green),var(--green-dark));display:flex;align-items:center;justify-content:center;min-height:220px;font-size:5rem">❤️</div>
+      <div style="padding:2rem">
+        <div class="eyebrow" style="margin-bottom:.6rem">⭐ Artikel Pilihan · Kardiologi</div>
+        <h3 style="font-family:'DM Serif Display',serif;font-size:1.4rem;font-weight:400;color:var(--green-deep);line-height:1.3;margin-bottom:.7rem">Kenali 7 Tanda Serangan Jantung yang Sering Diabaikan</h3>
+        <p style="font-size:.85rem;color:var(--text-sub);line-height:1.7;margin-bottom:1rem">Serangan jantung tidak selalu datang dengan nyeri dada yang dramatis. Banyak pasien mengabaikan tanda-tanda awal seperti sesak napas ringan atau kelelahan tidak biasa. dr. Arjuna Santoso, Sp.JP menjelaskan gejalanya.</p>
+        <div style="font-size:.75rem;color:var(--text-muted)">Oleh <strong style="color:var(--green)">dr. Arjuna Santoso, Sp.JP</strong> · 18 Juni 2026 · ⏱ 5 menit</div>
+      </div>
+    </div>
+    <!-- Grid artikel -->
+    <div class="grid-3">
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#E8F5E9,#C8ECC9);display:flex;align-items:center;justify-content:center;font-size:3rem">🥗</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Nutrisi</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">5 Makanan yang Terbukti Menurunkan Kolesterol</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">Kolesterol tinggi adalah faktor risiko utama penyakit jantung. Simak pilihan makanan rekomendasi ahli gizi kami.</div><div style="font-size:.72rem;color:var(--text-muted)">dr. Sari Dewi · 15 Jun 2026 · ⏱ 4 mnt</div></div></div>
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#EEF0FE,#D4D9FE);display:flex;align-items:center;justify-content:center;font-size:3rem">🧠</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Neurologi</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">Cara Efektif Mencegah Stroke di Usia Produktif</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">Stroke kini tidak hanya menyerang lansia. Pelajari faktor risiko dan langkah pencegahan yang bisa dilakukan.</div><div style="font-size:.72rem;color:var(--text-muted)">dr. Bima Pradana · 12 Jun 2026 · ⏱ 6 mnt</div></div></div>
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#FEF9E8,#FDE9B0);display:flex;align-items:center;justify-content:center;font-size:3rem">👶</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Anak & Parenting</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">Jadwal Imunisasi Anak 2026: Panduan Lengkap</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">Imunisasi adalah investasi terbaik untuk buah hati. Jadwal vaksin terbaru sesuai rekomendasi IDAI 2026.</div><div style="font-size:.72rem;color:var(--text-muted)">dr. Sari Dewi · 10 Jun 2026 · ⏱ 5 mnt</div></div></div>
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#F5F0FE,#E4D9FE);display:flex;align-items:center;justify-content:center;font-size:3rem">🏃</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Olahraga & Kebugaran</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">Olahraga 30 Menit: Manfaat yang Lebih Besar dari Dugaan</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">Aktivitas fisik moderat 30 menit per hari terbukti menurunkan risiko 20+ penyakit kronis.</div><div style="font-size:.72rem;color:var(--text-muted)">Tim Medis MedChain · 8 Jun 2026 · ⏱ 4 mnt</div></div></div>
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#E8F8F5,#B0EDE4);display:flex;align-items:center;justify-content:center;font-size:3rem">🩺</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Teknologi Medis</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">Blockchain untuk Rekam Medis: Revolusi Keamanan Data</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">MedChain Hospital menjadi pelopor penggunaan blockchain dalam manajemen rekam medis Indonesia.</div><div style="font-size:.72rem;color:var(--text-muted)">Tim MedChain · 5 Jun 2026 · ⏱ 7 mnt</div></div></div>
+      <div class="testi-card" style="padding:0;overflow:hidden"><div style="height:100px;background:linear-gradient(135deg,#FEF0F5,#FED0E3);display:flex;align-items:center;justify-content:center;font-size:3rem">🤱</div><div style="padding:1.2rem"><div class="eyebrow" style="font-size:.65rem;margin-bottom:.3rem">Kehamilan</div><div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.4rem;line-height:1.4">Trimester Pertama: Nutrisi dan Pemeriksaan Wajib</div><div style="font-size:.78rem;color:var(--text-sub);line-height:1.6;margin-bottom:.7rem">Tiga bulan pertama kehamilan adalah fase paling kritis. dr. Lestari membahas apa saja yang disiapkan.</div><div style="font-size:.72rem;color:var(--text-muted)">dr. Lestari Putri · 1 Jun 2026 · ⏱ 5 mnt</div></div></div>
+    </div>
+  </div></section>
+</div><!-- /page-artikel -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: KONTAK
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-kontak" class="page">
+  <div class="page-hero"><div class="container"><div class="eyebrow">Kami Siap Membantu</div><h1>Hubungi & Daftar Online</h1><p>Buat janji temu dengan mudah, atau hubungi kami langsung untuk informasi lebih lanjut.</p></div></div>
+  <section><div class="container">
+    <div class="grid-2" style="gap:3rem;align-items:start">
+      <div>
+        <div class="form-card">
+          <h3 style="font-family:'DM Serif Display',serif;font-weight:400;font-size:1.3rem;color:var(--green-deep);margin-bottom:.3rem">📅 Buat Janji Temu</h3>
+          <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.5rem">Tim kami akan menghubungi Anda untuk konfirmasi jadwal.</p>
+          <div class="form-row">
+            <div class="form-group"><label>Nama Lengkap *</label><input type="text" id="k-nama" placeholder="Nama Anda"></div>
+            <div class="form-group"><label>No. HP / WhatsApp *</label><input type="tel" id="k-hp" placeholder="08xx-xxxx-xxxx"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="k-email" placeholder="nama@email.com"></div>
+            <div class="form-group"><label>Tanggal Lahir</label><input type="date" id="k-lahir"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Poli / Spesialisasi *</label>
+              <select id="k-poli"><option value="">Pilih Poli...</option><option>Kardiologi</option><option>Neurologi</option><option>Pediatri</option><option>Ortopedi</option><option>Oftalmologi</option><option>Ginekologi</option><option>Paru</option><option>Gigi & Mulut</option><option>IGD / Darurat</option></select>
+            </div>
+            <div class="form-group"><label>Tanggal Kunjungan *</label><input type="date" id="k-tgl"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Sesi Pilihan</label>
+              <select id="k-sesi"><option>07.00 – 10.00</option><option>10.00 – 13.00</option><option>13.00 – 16.00</option><option>16.00 – 19.00</option><option>19.00 – 21.00</option></select>
+            </div>
+            <div class="form-group"><label>Jenis Kunjungan</label>
+              <select id="k-jenis"><option>Konsultasi Pertama</option><option>Kontrol / Follow-Up</option><option>Pemeriksaan Umum</option><option>Gawat Darurat</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label>Keluhan / Catatan Tambahan</label><textarea id="k-catatan" placeholder="Deskripsikan keluhan atau informasi yang perlu kami ketahui..."></textarea></div>
+          <div class="form-info" style="margin-bottom:1rem">ℹ️ &nbsp;Tim kami akan menghubungi via WhatsApp dalam 1×24 jam kerja untuk konfirmasi jadwal.</div>
+          <button onclick="submitJanji()" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem">✅ Kirim Permintaan Janji Temu</button>
+          <div id="kontak-success" style="display:none;background:var(--green-pale);border:1px solid var(--green-light);border-radius:var(--radius);padding:1rem;margin-top:1rem;font-size:.85rem;color:var(--green-dark)"></div>
+        </div>
+      </div>
+      <div>
+        <div class="info-card"><div class="info-icon-box">📍</div><div><div class="info-label">Alamat</div><div class="info-value">Jl. Jenderal Sudirman No. 88<br>Kebayoran Baru, Jakarta Selatan</div><div class="info-sub">DKI Jakarta 12920</div></div></div>
+        <div class="info-card"><div class="info-icon-box">📞</div><div><div class="info-label">Telepon & WhatsApp</div><div class="info-value">(021) 555-0188</div><div class="info-sub">WhatsApp: +62 812-5550-1880 · IGD 24 Jam</div></div></div>
+        <div class="info-card"><div class="info-icon-box">✉️</div><div><div class="info-label">Email</div><div class="info-value">info@medchain.id</div><div class="info-sub">Respons dalam 1×24 jam kerja</div></div></div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;margin-bottom:.8rem">
+          <div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.8rem">🕐 Jam Operasional</div>
+          <div class="ops-row"><span class="ops-hari">Senin – Jumat</span><span class="ops-jam">07.00 – 21.00</span></div>
+          <div class="ops-row"><span class="ops-hari">Sabtu</span><span class="ops-jam">08.00 – 18.00</span></div>
+          <div class="ops-row"><span class="ops-hari">Minggu & Hari Libur</span><span class="ops-jam">09.00 – 15.00</span></div>
+          <div class="ops-row"><span class="ops-hari" style="color:#d63031;font-weight:700">🚨 IGD</span><span class="ops-jam">24 Jam / 7 Hari</span></div>
+        </div>
+        <div class="map-placeholder"><div style="font-size:2.5rem;margin-bottom:.5rem">🗺️</div><div style="font-weight:700;color:var(--green-deep);font-size:.88rem">MedChain Hospital</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">Jl. Sudirman No. 88, Jakarta Selatan</div><div style="font-size:.72rem;color:var(--green);margin-top:.5rem;font-weight:600;cursor:pointer">📍 Buka di Google Maps →</div></div>
+      </div>
+    </div>
+  </div></section>
+</div><!-- /page-kontak -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PAGE: BLOCKCHAIN LEDGER
+════════════════════════════════════════════════════════════════════════ -->
+<div id="page-ledger" class="page">
+  <div class="page-hero" style="background:linear-gradient(112deg,#0D1F0D 0%,#1A3A1A 100%)">
+    <div class="container">
+      <div class="eyebrow">🔗 Blockchain System</div>
+      <h1 style="color:#fff">Ledger Rekam Medis<br><em style="color:var(--green)">Terdistribusi</em></h1>
+      <p style="color:rgba(255,255,255,.6)">Setiap entri rekam medis ditandatangani digital (RSA-2048) dan dirantai SHA-256 — manipulasi terdeteksi instan.</p>
+    </div>
+  </div>
+  <section><div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">📊 Status & Overview</button>
+      <button class="tab-btn" onclick="switchTab('input')">📋 Input Rekam Medis</button>
+      <button class="tab-btn" onclick="switchTab('chain')">⛓️ Visualisasi Rantai</button>
+      <button class="tab-btn" onclick="switchTab('audit')">🛡️ Audit & Simulasi</button>
+    </div>
+
+    <!-- TAB: OVERVIEW -->
+    <div id="tab-overview" class="tab-panel active">
+      <div id="status-banner"></div>
+      <div class="metrics-row" id="metrics-row"></div>
+      <div class="grid-2" style="gap:1.5rem">
+        <div>
+          <div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.7rem">🏷️ Hash Blok Terbaru</div>
+          <div id="latest-hash-box" style="background:var(--off);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.73rem;color:var(--text-sub);line-height:1.8"></div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.7rem">🌐 Status Node Jaringan</div>
+          <div style="background:#E8F5E9;border:1px solid var(--green-light);border-radius:var(--radius);padding:.9rem 1rem;display:flex;gap:.7rem;align-items:center;margin-bottom:.6rem"><span>🟢</span><div><div style="font-weight:700;font-size:.85rem;color:var(--green-deep)">RS_A — Port 5001</div><div style="font-size:.75rem;color:var(--text-muted)">Node Aktif · Sinkronisasi OK</div></div></div>
+          <div style="background:#FFF9E8;border:1px solid #FFE082;border-radius:var(--radius);padding:.9rem 1rem;display:flex;gap:.7rem;align-items:center"><span>🟡</span><div><div style="font-weight:700;font-size:.85rem;color:var(--green-deep)">RS_B — Port 5002</div><div style="font-size:.75rem;color:var(--text-muted)">Simulasi · Menunggu sinkronisasi</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: INPUT -->
+    <div id="tab-input" class="tab-panel">
+      <div class="form-card" style="max-width:700px">
+        <h3 style="font-family:'DM Serif Display',serif;font-weight:400;color:var(--green-deep);margin-bottom:.3rem">Tambah Rekam Medis ke Blockchain</h3>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.5rem">Data akan ditandatangani digital & dirantai ke blok sebelumnya secara otomatis.</p>
+        <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.8rem 1rem;font-size:.8rem;color:var(--green-dark);margin-bottom:1.2rem;display:flex;gap:.5rem">🔐 &nbsp;Data ditandatangani dengan RSA-2048 dan dirantai menggunakan SHA-256.</div>
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:.7rem">👤 Identitas Pasien</div>
+        <div class="form-row">
+          <div class="form-group"><label>Nama Lengkap *</label><input type="text" id="l-nama" placeholder="Budi Santoso"></div>
+          <div class="form-group"><label>No. Rekam Medis</label><input type="text" id="l-nrm" placeholder="RM-2026-001"></div>
+        </div>
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin:.5rem 0 .7rem">🩺 Data Klinis</div>
+        <div class="form-row">
+          <div class="form-group"><label>Diagnosa *</label><input type="text" id="l-diag" placeholder="Demam Berdarah Dengue"></div>
+          <div class="form-group"><label>Nama Dokter *</label><input type="text" id="l-dokter" placeholder="dr. Arjuna Santoso, Sp.JP"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Resep / Dosis</label><input type="text" id="l-dosis" placeholder="Paracetamol 500mg 3x/hari"></div>
+          <div class="form-group"><label>Poli</label>
+            <select id="l-poli"><option>Poli Umum</option><option>Kardiologi</option><option>Neurologi</option><option>Pediatri</option><option>Ortopedi</option><option>Ginekologi</option><option>IGD</option></select>
+          </div>
+        </div>
+        <div class="form-group"><label>Catatan Klinis</label><textarea id="l-catatan" placeholder="Keluhan, anamnesis, instruksi khusus..."></textarea></div>
+        <button onclick="addBlock()" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem">🔐 Tanda Tangani & Simpan ke Blockchain</button>
+        <div id="ledger-notif" style="display:none;margin-top:.8rem;background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.9rem 1rem;font-size:.85rem;color:var(--green-dark)"></div>
+      </div>
+    </div>
+
+    <!-- TAB: CHAIN VIZ -->
+    <div id="tab-chain" class="tab-panel">
+      <div style="margin-bottom:1rem;display:flex;gap:.5rem">
+        <button class="tab-btn active" id="chain-view-btn" onclick="setChainView('visual',this)" style="padding:.5rem 1rem;font-size:.8rem">⛓️ Rantai Blok</button>
+        <button class="tab-btn" onclick="setChainView('table',this)" style="padding:.5rem 1rem;font-size:.8rem">📊 Tabel</button>
+      </div>
+      <div id="chain-visual-view"><div id="chain-container"></div></div>
+      <div id="chain-table-view" style="display:none"><div id="chain-table"></div><button onclick="exportJSON()" class="btn btn-ghost" style="margin-top:1rem;font-size:.8rem">⬇️ Export JSON</button></div>
+    </div>
+
+    <!-- TAB: AUDIT -->
+    <div id="tab-audit" class="tab-panel">
+      <div style="background:#FFF9E8;border:1px solid #FFE082;border-radius:var(--radius);padding:.9rem 1rem;font-size:.83rem;color:#5a4a00;margin-bottom:1.5rem">⚠️ &nbsp;Fitur ini mensimulasikan penyerang yang mengubah data langsung tanpa menandatangani ulang.</div>
+      <div class="form-row" style="max-width:700px">
+        <div class="form-group"><label>Target Blok</label><select id="audit-block" onchange="onAuditBlockChange()"><option>—</option></select></div>
+        <div class="form-group"><label>Field Target</label><select id="audit-field" onchange="onAuditFieldChange()"><option>—</option></select></div>
+      </div>
+      <div class="form-group" style="max-width:700px"><label>Nilai Manipulasi</label><input type="text" id="audit-value" placeholder="Nilai palsu..."></div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.5rem">
+        <button onclick="runTamper()" class="btn btn-primary" style="background:#d63031;border-color:#d63031">🔴 Jalankan Tampering</button>
+        <button onclick="checkIntegrity()" class="btn btn-ghost">🔍 Cek Integritas</button>
+        <button onclick="resetLedger()" class="btn btn-ghost" style="color:var(--text-muted)">🔄 Reset Demo</button>
+      </div>
+      <div id="audit-result"></div>
+      <div style="margin-top:2rem">
+        <div style="font-weight:700;font-size:.88rem;color:var(--green-deep);margin-bottom:.8rem">📝 Kesimpulan Keamanan</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:700px">
+          <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.7rem 1rem;font-size:.8rem;color:var(--green-dark)">✅ <strong>RSA-2048</strong> — Pemalsuan tanda tangan tanpa kunci privat tidak mungkin.</div>
+          <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.7rem 1rem;font-size:.8rem;color:var(--green-dark)">✅ <strong>SHA-256 Chaining</strong> — Modifikasi satu blok memutus seluruh rantai kaskade.</div>
+          <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.7rem 1rem;font-size:.8rem;color:var(--green-dark)">✅ <strong>Canonical JSON</strong> — Urutan field tidak memengaruhi hash/signature.</div>
+          <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:.7rem 1rem;font-size:.8rem;color:var(--green-dark)">✅ <strong>Deteksi Real-Time</strong> — <code>is_chain_valid()</code> mendeteksi instan.</div>
+        </div>
+      </div>
+    </div>
+  </div></section>
+</div><!-- /page-ledger -->
+
+
+<!-- Footer (shared) -->
+<footer id="main-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">🏥 MedChain Hospital</div>
+        <div class="footer-tagline">Kesehatan Anda, Prioritas Kami</div>
+        <div class="footer-contact" style="color:rgba(255,255,255,.45)">📍 Jl. Sudirman No. 88, Jakarta Selatan<br>📞 (021) 555-0188<br>✉️ info@medchain.id</div>
+      </div>
+      <div><h4>Layanan</h4><div class="footer-links"><a href="#" onclick="showPage('layanan');return false">Kardiologi</a><a href="#" onclick="showPage('layanan');return false">Neurologi</a><a href="#" onclick="showPage('layanan');return false">Pediatri</a><a href="#" onclick="showPage('layanan');return false">IGD 24 Jam</a></div></div>
+      <div><h4>Informasi</h4><div class="footer-links"><a href="#" onclick="showPage('beranda');return false">Tentang Kami</a><a href="#" onclick="showPage('dokter');return false">Tim Dokter</a><a href="#" onclick="showPage('artikel');return false">Artikel</a><a href="#" onclick="showPage('ledger');return false">Blockchain Ledger</a></div></div>
+      <div><h4>Pasien</h4><div class="footer-links"><a href="#" onclick="showPage('kontak');return false">Daftar Online</a><a href="#" onclick="showPage('dokter');return false">Jadwal Dokter</a><a href="#" onclick="showPage('ledger');return false">Portal Rekam Medis</a></div></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MedChain Hospital · Sistem Rekam Medis Terdistribusi Berbasis Blockchain · Demo Proyek Akademik</span>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <span class="footer-badge">🔐 RSA-2048</span>
+        <span class="footer-badge">#️⃣ SHA-256</span>
+        <span class="footer-badge">🌐 P2P Distributed</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+const crypto = window.crypto || window.msCrypto;
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function fakeSign(data) {
+  const h = await sha256(JSON.stringify(data) + Math.random());
+  return h + h;
+}
+
+let ledger = [];
+
+async function initLedger() {
+  const gPrev = '0'.repeat(64);
+  const gData = {info:'Genesis Block — MedChain Hospital'};
+  const gRaw  = JSON.stringify({index:0,data:gData,prev:gPrev},null,0);
+  const gHash = await sha256(gRaw);
+  ledger = [{
+    index:0, timestamp:new Date().toISOString(),
+    patient_data:gData, faskes_id:'RS_A',
+    signature_hex:'GENESIS', previous_hash:gPrev, block_hash:gHash, is_genesis:true,
+  }];
+
+  const records = [
+    {nama:'Budi Santoso', no_rm:'RM-2026-001', diagnosa:'Demam Berdarah', dokter:'dr. Arjuna Santoso', dosis:'Paracetamol 500mg', poli:'Kardiologi', catatan:'-'},
+    {nama:'Siti Rahayu',  no_rm:'RM-2026-002', diagnosa:'Tifus',          dokter:'dr. Bima Pradana',   dosis:'Ciprofloxacin 500mg', poli:'Poli Umum', catatan:'-'},
+    {nama:'Ahmad Fauzi',  no_rm:'RM-2026-003', diagnosa:'Hipertensi',     dokter:'dr. Arjuna Santoso', dosis:'Amlodipine 5mg',      poli:'Kardiologi', catatan:'-'},
+  ];
+  for(const r of records) await appendBlock(r);
+  renderAll();
+}
+
+async function appendBlock(patient_data) {
+  const prev   = ledger[ledger.length-1];
+  const ts     = new Date().toISOString();
+  const sig    = await fakeSign({patient_data,ts});
+  const raw    = JSON.stringify({index:ledger.length,data:patient_data,prev:prev.block_hash,ts},null,0);
+  const hash   = await sha256(raw);
+  ledger.push({
+    index:ledger.length, timestamp:ts,
+    patient_data, faskes_id:'RS_A',
+    signature_hex:sig, previous_hash:prev.block_hash,
+    block_hash:hash, is_genesis:false,
+  });
+}
+
+async function recomputeHash(block) {
+  const raw = JSON.stringify({index:block.index,data:block.patient_data,prev:block.previous_hash,ts:block.timestamp},null,0);
+  return sha256(raw);
+}
+
+function isChainValid() {
+  for(let i=1;i<ledger.length;i++){
+    if(ledger[i].previous_hash !== ledger[i-1].block_hash)
+      return {valid:false,msg:`Rantai putus antara blok #${ledger[i-1].index} dan #${ledger[i].index}: previous_hash tidak cocok dengan block_hash blok sebelumnya.`};
+  }
+  return {valid:true,msg:'Rantai valid. Tidak ada manipulasi terdeteksi.'};
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderOverview();
+  renderChain();
+  renderAuditSelects();
+  document.getElementById('hero-blok-count').textContent = ledger.length + ' Blok';
+}
+
+function renderOverview() {
+  const {valid,msg} = isChainValid();
+  document.getElementById('status-banner').innerHTML = valid
+    ? `<div class="status-valid"><div class="status-icon">✅</div><div><div class="status-title">RANTAI VALID — TIDAK ADA MANIPULASI</div><div class="status-msg">${msg}</div></div></div>`
+    : `<div class="status-compromised"><div class="status-icon">🚨</div><div><div class="status-title">RANTAI TERKOMPROMI — MANIPULASI TERDETEKSI</div><div class="status-msg">${msg}</div></div></div>`;
+
+  const latest = ledger[ledger.length-1];
+  document.getElementById('metrics-row').innerHTML = `
+    <div class="metric-card"><div class="metric-val">${ledger.length}</div><div class="metric-lbl">⛓️ Total Blok</div></div>
+    <div class="metric-card"><div class="metric-val">${ledger.length-1}</div><div class="metric-lbl">📋 Rekam Medis</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:1rem">RS_A/B</div><div class="metric-lbl">🌐 Node Aktif</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:1rem">RSA</div><div class="metric-lbl">🔐 Enkripsi</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:1rem">SHA-256</div><div class="metric-lbl">#️⃣ Hash</div></div>`;
+
+  document.getElementById('latest-hash-box').innerHTML =
+    `Block #${latest.index}\nTimestamp : ${latest.timestamp}\nFaskes    : ${latest.faskes_id}\nHash      : ${latest.block_hash}\nPrev      : ${latest.previous_hash}`
+    .replace(/\n/g,'<br>');
+}
+
+function renderChain() {
+  // Visual
+  let html = '';
+  for(let i=0;i<ledger.length;i++){
+    const b = ledger[i];
+    const isG = b.is_genesis;
+    const isBad = i>0 && b.previous_hash!==ledger[i-1].block_hash;
+    const cls = isG?'genesis':isBad?'invalid':'';
+    const icon = isG?'🔮':isBad?'❌':'✅';
+    const dataLine = isG?'Genesis Block — Titik Awal Rantai'
+      :`👤 ${b.patient_data.nama||'?'} &nbsp;·&nbsp; 🩺 ${b.patient_data.diagnosa||'?'} &nbsp;·&nbsp; 💊 ${b.patient_data.dosis||'-'}`;
+    const borderColor = isG?'#a29bfe':isBad?'#d63031':'var(--green)';
+    const hashColor = isBad?'#d63031':'var(--green)';
+    html += `
+    <div class="block-node ${cls}" style="border-left-color:${borderColor}">
+      <div class="block-header-row">
+        <div class="block-idx">${icon} &nbsp;BLOK #${b.index}</div>
+        <div style="display:flex;gap:.4rem;align-items:center">
+          <span class="block-faskes-tag">${b.faskes_id}</span>
+          <span class="block-ts-fs">${b.timestamp.slice(0,19).replace('T',' ')}</span>
+        </div>
+      </div>
+      <div class="block-data-row">${dataLine}</div>
+      <div class="hash-grid">
+        <span class="hl-label">SIG</span><span class="hl-val hl-purple">${b.signature_hex.slice(0,48)}…</span>
+        <span class="hl-label">PREV</span><span class="hl-val hl-blue">${b.previous_hash.slice(0,48)}…</span>
+        <span class="hl-label">HASH</span><span class="hl-val" style="color:${hashColor}">${b.block_hash.slice(0,48)}…</span>
+      </div>
+    </div>`;
+    if(i<ledger.length-1) html+=`<div class="chain-conn">↓ &nbsp;previous_hash</div>`;
+  }
+  document.getElementById('chain-container').innerHTML = html;
+
+  // Table
+  let thtml = `<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+  <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">#</th>
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">Timestamp</th>
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">Nama</th>
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">Diagnosa</th>
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">Dosis</th>
+    <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">Hash</th>
+  </tr></thead><tbody>`;
+  ledger.forEach(b=>{
+    const isBad = b.index>0 && b.previous_hash!==ledger[b.index-1]?.block_hash;
+    thtml+=`<tr style="border-bottom:1px solid var(--border);${isBad?'background:#fff5f5':''}">
+      <td style="padding:.6rem .8rem;font-weight:700;color:${isBad?'#d63031':'var(--green)'}">
+        ${b.is_genesis?'🔮':isBad?'❌':'✅'} ${b.index}</td>
+      <td style="padding:.6rem .8rem;color:var(--text-muted)">${b.timestamp.slice(0,19).replace('T',' ')}</td>
+      <td style="padding:.6rem .8rem;font-weight:600;color:var(--green-deep)">${b.patient_data.nama||'GENESIS'}</td>
+      <td style="padding:.6rem .8rem;color:var(--text-sub)">${b.patient_data.diagnosa||'-'}</td>
+      <td style="padding:.6rem .8rem;color:var(--text-sub)">${b.patient_data.dosis||'-'}</td>
+      <td style="padding:.6rem .8rem;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--text-muted)">${b.block_hash.slice(0,20)}…</td>
+    </tr>`;
+  });
+  thtml+='</tbody></table>';
+  document.getElementById('chain-table').innerHTML = thtml;
+}
+
+function renderAuditSelects() {
+  const nonG = ledger.filter(b=>!b.is_genesis);
+  const sel = document.getElementById('audit-block');
+  sel.innerHTML = '<option value="">Pilih blok...</option>';
+  nonG.forEach(b=>{
+    sel.innerHTML += `<option value="${b.index}">Blok #${b.index} — ${b.patient_data.nama||'?'}</option>`;
+  });
+}
+
+// ── Routing ───────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>{
+    a.classList.toggle('active', a.getAttribute('onclick') && a.getAttribute('onclick').includes("'"+id+"'"));
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleMobileMenu() {
+  const m = document.getElementById('mobile-menu');
+  m.style.display = m.style.display==='none'?'block':'none';
+}
+
+// ── Tabs (Ledger) ─────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function setChainView(mode,btn) {
+  document.getElementById('chain-visual-view').style.display = mode==='visual'?'block':'none';
+  document.getElementById('chain-table-view').style.display  = mode==='table'?'block':'none';
+  document.querySelectorAll('#tab-chain .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── Blockchain Actions ────────────────────────────────────────────────────────
+async function addBlock() {
+  const nama   = document.getElementById('l-nama').value.trim();
+  const diag   = document.getElementById('l-diag').value.trim();
+  const dokter = document.getElementById('l-dokter').value.trim();
+  if(!nama||!diag||!dokter){showToast('❌ Nama, Diagnosa, dan Dokter wajib diisi.');return;}
+
+  const patient_data = {
+    nama, no_rm:document.getElementById('l-nrm').value||`RM-AUTO-${ledger.length.toString().padStart(3,'0')}`,
+    diagnosa:diag, dokter,
+    dosis:document.getElementById('l-dosis').value||'-',
+    poli:document.getElementById('l-poli').value,
+    catatan:document.getElementById('l-catatan').value||'-',
+  };
+
+  await appendBlock(patient_data);
+  renderAll();
+
+  const notif = document.getElementById('ledger-notif');
+  notif.style.display='block';
+  notif.innerHTML = `✅ Rekam medis <strong>${nama}</strong> berhasil disimpan sebagai Blok #${ledger.length-1}!`;
+
+  ['l-nama','l-nrm','l-diag','l-dokter','l-dosis','l-catatan'].forEach(id=>{document.getElementById(id).value=''});
+  showToast(`✅ Blok #${ledger.length-1} berhasil ditambahkan ke chain!`);
+}
+
+function exportJSON() {
+  const data = JSON.stringify(ledger,null,2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download = 'medchain_ledger.json';
+  a.click();
+}
+
+function onAuditBlockChange() {
+  const idx = parseInt(document.getElementById('audit-block').value);
+  const b = ledger[idx];
+  const sel = document.getElementById('audit-field');
+  sel.innerHTML = '';
+  if(!b) return;
+  Object.keys(b.patient_data).forEach(k=>{ sel.innerHTML+=`<option>${k}</option>`; });
+  onAuditFieldChange();
+}
+
+function onAuditFieldChange() {
+  const idx   = parseInt(document.getElementById('audit-block').value);
+  const field = document.getElementById('audit-field').value;
+  const b = ledger[idx];
+  if(!b) return;
+  document.getElementById('audit-value').value = (b.patient_data[field]||'') + ' ← DIMANIPULASI';
+}
+
+function runTamper() {
+  const idx   = parseInt(document.getElementById('audit-block').value);
+  const field = document.getElementById('audit-field').value;
+  const val   = document.getElementById('audit-value').value;
+  if(!idx||!field) {showToast('❌ Pilih blok dan field terlebih dahulu.');return;}
+  ledger[idx].patient_data[field] = val;
+  // SENGAJA tidak update hash — ini inti simulasinya
+  renderAll();
+  showToast('🔴 Tampering dijalankan. Cek integritas untuk melihat hasilnya.');
+}
+
+function checkIntegrity() {
+  const {valid,msg} = isChainValid();
+  const div = document.getElementById('audit-result');
+  if(valid){
+    div.innerHTML=`<div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:1rem;color:var(--green-dark);font-size:.85rem">✅ ${msg}</div>`;
+  } else {
+    div.innerHTML=`
+    <div style="background:#fff0f0;border:2px solid #d63031;border-radius:12px;padding:1.5rem">
+      <div style="font-size:1.2rem;font-weight:800;color:#d63031;margin-bottom:.5rem">🚨 Deteksi Berhasil!</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#4a1a1a;margin-bottom:.8rem">${msg}</div>
+      <div style="font-size:.82rem;color:#6b3a3a;line-height:1.7">
+        Perubahan data mengakibatkan <code>block_hash</code> tidak cocok saat dihitung ulang —
+        seluruh rantai di bawahnya dinyatakan <strong>tidak valid</strong>.
+      </div>
+    </div>`;
+  }
+}
+
+async function resetLedger() {
+  ledger = [];
+  await initLedger();
+  document.getElementById('audit-result').innerHTML='';
+  document.getElementById('ledger-notif').style.display='none';
+  showToast('🔄 Ledger berhasil direset ke data demo awal.');
+}
+
+// ── Dokter filter ──────────────────────────────────────────────────────────────
+function filterDokter() {
+  const q    = document.getElementById('dokter-search').value.toLowerCase();
+  const spec = document.getElementById('dokter-filter').value.toLowerCase();
+  const cards = document.querySelectorAll('#dokter-grid .doctor-card');
+  let shown = 0;
+  cards.forEach(c=>{
+    const name = c.dataset.name||'';
+    const cs   = c.dataset.spec||'';
+    const show = (!q || name.includes(q) || cs.toLowerCase().includes(q)) &&
+                 (!spec || cs.toLowerCase().includes(spec));
+    c.style.display = show?'':'none';
+    if(show) shown++;
+  });
+  document.getElementById('dokter-count').textContent = `Menampilkan ${shown} dokter`;
+  document.getElementById('dokter-empty').style.display = shown===0?'block':'none';
+}
+
+// ── Kontak form ───────────────────────────────────────────────────────────────
+function submitJanji() {
+  const nama = document.getElementById('k-nama').value.trim();
+  const hp   = document.getElementById('k-hp').value.trim();
+  const poli = document.getElementById('k-poli').value;
+  const tgl  = document.getElementById('k-tgl').value;
+  const sesi = document.getElementById('k-sesi').value;
+  if(!nama||!hp||!poli||!tgl){showToast('❌ Nama, No. HP, Poli, dan Tanggal wajib diisi.');return;}
+  const succ = document.getElementById('kontak-success');
+  succ.style.display='block';
+  succ.innerHTML = `✅ <strong>Permintaan berhasil dikirim!</strong><br>
+    Halo <strong>${nama}</strong>, permintaan janji untuk poli <strong>${poli}</strong> pada <strong>${tgl}</strong> (sesi ${sesi}) telah kami terima.
+    Tim kami akan menghubungi <strong>${hp}</strong> untuk konfirmasi.`;
+  ['k-nama','k-hp','k-email','k-poli','k-tgl','k-catatan'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  showToast('✅ Permintaan janji temu berhasil dikirim!');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+initLedger();
+</script>
+</body>
+</html>
