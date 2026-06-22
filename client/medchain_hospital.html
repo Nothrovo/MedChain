@@ -1003,66 +1003,67 @@ footer{background:var(--green-deep);color:rgba(255,255,255,.55);padding:4rem 0 2
 <div id="toast"></div>
 
 <script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_BASE = 'http://localhost:5001';
+
 // ── State ─────────────────────────────────────────────────────────────────────
-const crypto = window.crypto || window.msCrypto;
-
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-async function fakeSign(data) {
-  const h = await sha256(JSON.stringify(data) + Math.random());
-  return h + h;
-}
-
 let ledger = [];
+let chainValid = true;
+let chainMessage = '';
+
+async function api(path, options = {}) {
+  try {
+    const res = await fetch(API_BASE + path, {
+      headers: {'Content-Type':'application/json'},
+      ...options,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({detail: res.statusText}));
+      throw new Error(err.detail || res.statusText);
+    }
+    return res.json();
+  } catch (e) {
+    if (e.message === 'Failed to fetch') {
+      showToast('❌ Server tidak terjangkau. Pastikan backend berjalan di ' + API_BASE);
+      throw e;
+    }
+    throw e;
+  }
+}
+
+async function loadChain() {
+  const data = await api('/api/chain');
+  ledger = data.chain.map((b, i) => ({...b, is_genesis: i === 0}));
+}
+
+async function loadValidation() {
+  const data = await api('/api/validate');
+  chainValid = data.chain_valid;
+  chainMessage = data.message;
+  return data;
+}
 
 async function initLedger() {
-  const gPrev = '0'.repeat(64);
-  const gData = {info:'Genesis Block — MedChain Hospital'};
-  const gRaw  = JSON.stringify({index:0,data:gData,prev:gPrev},null,0);
-  const gHash = await sha256(gRaw);
-  ledger = [{
-    index:0, timestamp:new Date().toISOString(),
-    patient_data:gData, faskes_id:'RS_A',
-    signature_hex:'GENESIS', previous_hash:gPrev, block_hash:gHash, is_genesis:true,
-  }];
-
-  const records = [
-    {nama:'Budi Santoso', no_rm:'RM-2026-001', diagnosa:'Demam Berdarah', dokter:'dr. Arjuna Santoso', dosis:'Paracetamol 500mg', poli:'Kardiologi', catatan:'-'},
-    {nama:'Siti Rahayu',  no_rm:'RM-2026-002', diagnosa:'Tifus',          dokter:'dr. Bima Pradana',   dosis:'Ciprofloxacin 500mg', poli:'Poli Umum', catatan:'-'},
-    {nama:'Ahmad Fauzi',  no_rm:'RM-2026-003', diagnosa:'Hipertensi',     dokter:'dr. Arjuna Santoso', dosis:'Amlodipine 5mg',      poli:'Kardiologi', catatan:'-'},
-  ];
-  for(const r of records) await appendBlock(r);
-  renderAll();
-}
-
-async function appendBlock(patient_data) {
-  const prev   = ledger[ledger.length-1];
-  const ts     = new Date().toISOString();
-  const sig    = await fakeSign({patient_data,ts});
-  const raw    = JSON.stringify({index:ledger.length,data:patient_data,prev:prev.block_hash,ts},null,0);
-  const hash   = await sha256(raw);
-  ledger.push({
-    index:ledger.length, timestamp:ts,
-    patient_data, faskes_id:'RS_A',
-    signature_hex:sig, previous_hash:prev.block_hash,
-    block_hash:hash, is_genesis:false,
-  });
-}
-
-async function recomputeHash(block) {
-  const raw = JSON.stringify({index:block.index,data:block.patient_data,prev:block.previous_hash,ts:block.timestamp},null,0);
-  return sha256(raw);
-}
-
-function isChainValid() {
-  for(let i=1;i<ledger.length;i++){
-    if(ledger[i].previous_hash !== ledger[i-1].block_hash)
-      return {valid:false,msg:`Rantai putus antara blok #${ledger[i-1].index} dan #${ledger[i].index}: previous_hash tidak cocok dengan block_hash blok sebelumnya.`};
+  try {
+    await loadChain();
+    await loadValidation();
+    renderAll();
+  } catch {
+    ledger = [];
+    renderOffline();
   }
-  return {valid:true,msg:'Rantai valid. Tidak ada manipulasi terdeteksi.'};
+}
+
+function renderOffline() {
+  const banner = document.getElementById('status-banner');
+  if (banner) banner.innerHTML = `
+    <div class="status-compromised" style="border-color:#FFE082;background:linear-gradient(135deg,#FFF9E8,#FFF3D0)">
+      <div class="status-icon">⚠️</div>
+      <div>
+        <div class="status-title" style="color:#5a4a00">SERVER OFFLINE</div>
+        <div class="status-msg" style="color:#6b5a1a">Backend tidak terjangkau di ${API_BASE}. Jalankan: <code>python network/node_api.py</code></div>
+      </div>
+    </div>`;
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -1074,17 +1075,16 @@ function renderAll() {
 }
 
 function renderOverview() {
-  const {valid,msg} = isChainValid();
-  document.getElementById('status-banner').innerHTML = valid
-    ? `<div class="status-valid"><div class="status-icon">✅</div><div><div class="status-title">RANTAI VALID — TIDAK ADA MANIPULASI</div><div class="status-msg">${msg}</div></div></div>`
-    : `<div class="status-compromised"><div class="status-icon">🚨</div><div><div class="status-title">RANTAI TERKOMPROMI — MANIPULASI TERDETEKSI</div><div class="status-msg">${msg}</div></div></div>`;
+  document.getElementById('status-banner').innerHTML = chainValid
+    ? `<div class="status-valid"><div class="status-icon">✅</div><div><div class="status-title">RANTAI VALID — TIDAK ADA MANIPULASI</div><div class="status-msg">${chainMessage}</div></div></div>`
+    : `<div class="status-compromised"><div class="status-icon">🚨</div><div><div class="status-title">RANTAI TERKOMPROMI — MANIPULASI TERDETEKSI</div><div class="status-msg">${chainMessage}</div></div></div>`;
 
   const latest = ledger[ledger.length-1];
   document.getElementById('metrics-row').innerHTML = `
     <div class="metric-card"><div class="metric-val">${ledger.length}</div><div class="metric-lbl">⛓️ Total Blok</div></div>
     <div class="metric-card"><div class="metric-val">${ledger.length-1}</div><div class="metric-lbl">📋 Rekam Medis</div></div>
     <div class="metric-card"><div class="metric-val" style="font-size:1rem">RS_A/B</div><div class="metric-lbl">🌐 Node Aktif</div></div>
-    <div class="metric-card"><div class="metric-val" style="font-size:1rem">RSA</div><div class="metric-lbl">🔐 Enkripsi</div></div>
+    <div class="metric-card"><div class="metric-val" style="font-size:1rem">RSA-2048</div><div class="metric-lbl">🔐 Signature</div></div>
     <div class="metric-card"><div class="metric-val" style="font-size:1rem">SHA-256</div><div class="metric-lbl">#️⃣ Hash</div></div>`;
 
   document.getElementById('latest-hash-box').innerHTML =
@@ -1093,7 +1093,6 @@ function renderOverview() {
 }
 
 function renderChain() {
-  // Visual
   let html = '';
   for(let i=0;i<ledger.length;i++){
     const b = ledger[i];
@@ -1125,7 +1124,6 @@ function renderChain() {
   }
   document.getElementById('chain-container').innerHTML = html;
 
-  // Table
   let thtml = `<table style="width:100%;border-collapse:collapse;font-size:.8rem">
   <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
     <th style="padding:.6rem .8rem;color:var(--text-muted);font-weight:600">#</th>
@@ -1168,6 +1166,7 @@ function showPage(id) {
     a.classList.toggle('active', a.getAttribute('onclick') && a.getAttribute('onclick').includes("'"+id+"'"));
   });
   window.scrollTo({top:0,behavior:'smooth'});
+  if (id === 'ledger') initLedger();
 }
 
 function toggleMobileMenu() {
@@ -1190,30 +1189,38 @@ function setChainView(mode,btn) {
   btn.classList.add('active');
 }
 
-// ── Blockchain Actions ────────────────────────────────────────────────────────
+// ── Blockchain Actions (via API) ─────────────────────────────────────────────
 async function addBlock() {
   const nama   = document.getElementById('l-nama').value.trim();
   const diag   = document.getElementById('l-diag').value.trim();
   const dokter = document.getElementById('l-dokter').value.trim();
   if(!nama||!diag||!dokter){showToast('❌ Nama, Diagnosa, dan Dokter wajib diisi.');return;}
 
-  const patient_data = {
-    nama, no_rm:document.getElementById('l-nrm').value||`RM-AUTO-${ledger.length.toString().padStart(3,'0')}`,
-    diagnosa:diag, dokter,
-    dosis:document.getElementById('l-dosis').value||'-',
-    poli:document.getElementById('l-poli').value,
-    catatan:document.getElementById('l-catatan').value||'-',
-  };
+  try {
+    const body = {
+      nama,
+      no_rm: document.getElementById('l-nrm').value || undefined,
+      diagnosa: diag,
+      dokter,
+      dosis: document.getElementById('l-dosis').value || '-',
+      poli: document.getElementById('l-poli').value,
+      catatan: document.getElementById('l-catatan').value || '-',
+    };
+    const result = await api('/api/records', {method:'POST', body:JSON.stringify(body)});
 
-  await appendBlock(patient_data);
-  renderAll();
+    await loadChain();
+    await loadValidation();
+    renderAll();
 
-  const notif = document.getElementById('ledger-notif');
-  notif.style.display='block';
-  notif.innerHTML = `✅ Rekam medis <strong>${nama}</strong> berhasil disimpan sebagai Blok #${ledger.length-1}!`;
+    const notif = document.getElementById('ledger-notif');
+    notif.style.display='block';
+    notif.innerHTML = `✅ ${result.message}<br><small style="font-family:'JetBrains Mono',monospace;color:var(--text-muted)">Hash: ${result.block.block_hash}</small>`;
 
-  ['l-nama','l-nrm','l-diag','l-dokter','l-dosis','l-catatan'].forEach(id=>{document.getElementById(id).value=''});
-  showToast(`✅ Blok #${ledger.length-1} berhasil ditambahkan ke chain!`);
+    ['l-nama','l-nrm','l-diag','l-dokter','l-dosis','l-catatan'].forEach(id=>{document.getElementById(id).value=''});
+    showToast(`✅ Blok #${result.block.index} berhasil ditambahkan (RSA-2048 signed)!`);
+  } catch (e) {
+    showToast('❌ Gagal menambahkan rekam medis: ' + e.message);
+  }
 }
 
 function exportJSON() {
@@ -1242,41 +1249,77 @@ function onAuditFieldChange() {
   document.getElementById('audit-value').value = (b.patient_data[field]||'') + ' ← DIMANIPULASI';
 }
 
-function runTamper() {
+async function runTamper() {
   const idx   = parseInt(document.getElementById('audit-block').value);
   const field = document.getElementById('audit-field').value;
   const val   = document.getElementById('audit-value').value;
   if(!idx||!field) {showToast('❌ Pilih blok dan field terlebih dahulu.');return;}
-  ledger[idx].patient_data[field] = val;
-  // SENGAJA tidak update hash — ini inti simulasinya
-  renderAll();
-  showToast('🔴 Tampering dijalankan. Cek integritas untuk melihat hasilnya.');
+
+  try {
+    const result = await api('/api/tamper', {
+      method:'POST',
+      body: JSON.stringify({block_index:idx, field, new_value:val}),
+    });
+    await loadChain();
+    await loadValidation();
+    renderAll();
+    showToast('🔴 Tampering dijalankan via server. Cek integritas untuk hasilnya.');
+  } catch (e) {
+    showToast('❌ Gagal tampering: ' + e.message);
+  }
 }
 
-function checkIntegrity() {
-  const {valid,msg} = isChainValid();
-  const div = document.getElementById('audit-result');
-  if(valid){
-    div.innerHTML=`<div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:1rem;color:var(--green-dark);font-size:.85rem">✅ ${msg}</div>`;
-  } else {
-    div.innerHTML=`
-    <div style="background:#fff0f0;border:2px solid #d63031;border-radius:12px;padding:1.5rem">
-      <div style="font-size:1.2rem;font-weight:800;color:#d63031;margin-bottom:.5rem">🚨 Deteksi Berhasil!</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#4a1a1a;margin-bottom:.8rem">${msg}</div>
-      <div style="font-size:.82rem;color:#6b3a3a;line-height:1.7">
-        Perubahan data mengakibatkan <code>block_hash</code> tidak cocok saat dihitung ulang —
-        seluruh rantai di bawahnya dinyatakan <strong>tidak valid</strong>.
-      </div>
-    </div>`;
+async function checkIntegrity() {
+  try {
+    const data = await api('/api/validate');
+    chainValid = data.chain_valid;
+    chainMessage = data.message;
+    renderOverview();
+
+    const div = document.getElementById('audit-result');
+    if(data.chain_valid){
+      let sigHtml = data.signature_verification.map(s =>
+        `<div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;padding:.3rem 0">
+          <span>${s.signature_valid?'✅':'❌'}</span>
+          <span>Blok #${s.index} — ${s.nama}: Signature ${s.signature_valid?'VALID':'INVALID'}</span>
+        </div>`
+      ).join('');
+      div.innerHTML=`
+        <div style="background:var(--green-pale);border:1px solid var(--green-light);border-radius:8px;padding:1rem;color:var(--green-dark);font-size:.85rem">
+          ✅ ${data.message}
+        </div>
+        <div style="margin-top:.8rem;background:var(--off);border:1px solid var(--border);border-radius:8px;padding:1rem">
+          <div style="font-weight:700;font-size:.82rem;color:var(--green-deep);margin-bottom:.5rem">🔐 Verifikasi Signature RSA-2048</div>
+          ${sigHtml}
+        </div>`;
+    } else {
+      div.innerHTML=`
+      <div style="background:#fff0f0;border:2px solid #d63031;border-radius:12px;padding:1.5rem">
+        <div style="font-size:1.2rem;font-weight:800;color:#d63031;margin-bottom:.5rem">🚨 Deteksi Berhasil!</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#4a1a1a;margin-bottom:.8rem">${data.message}</div>
+        <div style="font-size:.82rem;color:#6b3a3a;line-height:1.7">
+          Perubahan data mengakibatkan <code>block_hash</code> tidak cocok saat dihitung ulang —
+          seluruh rantai di bawahnya dinyatakan <strong>tidak valid</strong>.
+        </div>
+      </div>`;
+    }
+  } catch (e) {
+    showToast('❌ Gagal validasi: ' + e.message);
   }
 }
 
 async function resetLedger() {
-  ledger = [];
-  await initLedger();
-  document.getElementById('audit-result').innerHTML='';
-  document.getElementById('ledger-notif').style.display='none';
-  showToast('🔄 Ledger berhasil direset ke data demo awal.');
+  try {
+    await api('/api/reset', {method:'POST'});
+    await loadChain();
+    await loadValidation();
+    renderAll();
+    document.getElementById('audit-result').innerHTML='';
+    document.getElementById('ledger-notif').style.display='none';
+    showToast('🔄 Ledger berhasil direset ke data demo awal.');
+  } catch (e) {
+    showToast('❌ Gagal reset: ' + e.message);
+  }
 }
 
 // ── Dokter filter ──────────────────────────────────────────────────────────────
